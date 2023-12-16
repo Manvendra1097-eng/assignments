@@ -12,10 +12,57 @@
       Points to Note: 
         1. the input can have multiple continuous spaces, you're supposed to avoid them and parse the expression correctly
         2. the input can have invalid non-numerical characters like `5 + abc`, you're supposed to throw error for such inputs
+        3. it should handle pranthese 
+        4. it should also handle invalid pranthesis like '10 + (2 + 3' it have single '(' or '10 + 2) + 3'
+        5. it should throw error for 
 
   Once you've implemented the logic, test your code by running
 */
 
-class Calculator {}
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  add(value) {
+    this.result += value;
+  }
+
+  subtract(value) {
+    this.result -= value;
+  }
+
+  multiply(value) {
+    this.result *= value;
+  }
+
+  divide(value) {
+    if (value === 0) {
+      throw new Error('Division by zero is not allowed.');
+    }
+    this.result /= value;
+  }
+
+  clear() {
+    this.result = 0;
+  }
+
+  getResult() {
+    return this.result;
+  }
+
+  calculate(expression) {
+    try {
+      this.result = eval(expression);
+      if (!Number.isFinite(this.result)) {
+        throw new Error('Invalid result (e.g., NaN or Infinity).');
+      }
+    } catch (error) {
+      throw new Error('Invalid expression.');
+    }
+  }
+}
+
+module.exports = Calculator;
 
 module.exports = Calculator;
