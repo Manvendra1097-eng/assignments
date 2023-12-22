@@ -39,11 +39,99 @@
 
   Testing the server - run `npm run test-todoServer` command in terminal
  */
-  const express = require('express');
-  const bodyParser = require('body-parser');
-  
-  const app = express();
-  
-  app.use(bodyParser.json());
-  
-  module.exports = app;
+const express = require('express');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+
+const app = express();
+
+app.use(bodyParser.json());
+
+// Database
+let todos = [
+  {
+    id: 123,
+    title: 'todo1',
+    description: 'todo1 description',
+  },
+];
+
+// GET http://localhost:3000/todos
+
+app.get('/todos', function (req, res) {
+  fs.readFile('./todos.json', 'utf-8', (err, data) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ msg: 'Internal Server Error' });
+    }
+    todos = JSON.parse(data);
+    res.status(200).json({ todos });
+  });
+});
+
+// GET http://localhost:3000/todos/123
+app.get('/todos/:id', function (req, res) {
+  fs.readFile('./todos.json', 'utf-8', (err, data) => {
+    if (err) return res.status(500).json({ msg: 'Internal Server Error' });
+    todos = JSON.parse(data);
+    const id = req.params.id - 0;
+    const todo = todos.find((todo) => todo.id === id);
+    if (!todo) {
+      return res.status(404).json({ msg: 'Todo not found' });
+    }
+    res.status(200).json({ todo });
+  });
+});
+
+/*
+    Example: POST http://localhost:3000/todos
+    Request Body: { "title": "Buy groceries", "completed": false, description: "I should buy groceries" }
+*/
+
+app.post('/todos', function (req, res) {
+  const { title, completed, description } = req.body;
+  if (!(title || completed || description)) {
+    return res.status(400).json({ msg: 'invalid request body' });
+  }
+  const id = new Date().getTime();
+  todos.push({ id, title, completed, description });
+  fs.writeFile('./todos.json', JSON.stringify(todos), 'utf-8', (err) => {
+    if (err) return res.status(500).json({ msg: 'Internal server error' });
+  });
+  res.status(201).json({ id });
+});
+
+/*
+    Example: PUT http://localhost:3000/todos/123
+    Request Body: { "title": "Buy groceries", "completed": true }
+*/
+
+app.put('/todos/:id', function (req, res) {
+  fs.readFile('./todos.json', 'utf-8', (err, data) => {
+    if (err) return res.status(500).json({ msg: 'Internal server error' });
+    const id = req.params.id - 0;
+    const { title, completed, description } = req.body;
+    console.log(title, completed, description);
+    todos = JSON.parse(data);
+    const todo = todos.find((todo) => todo.id === id);
+    if (!todo) return res.status(404).json({ msg: 'todo not found' });
+    todos = todos.map((todo) => {
+      if (todo.id === id) {
+        console.log('in if', completed);
+        todo.title = title ?? todo.title;
+        todo.completed = completed ?? todo.completed;
+        todo.description = description ?? todo.description;
+      }
+      return todo;
+    });
+
+    fs.writeFile('./todos.json', JSON.stringify(todos), 'utf-8', (err) => {
+      if (err) return res.status(500).json({ msg: 'Internal server error' });
+      return res.status(200).send();
+    });
+  });
+});
+
+app.listen(3000);
+
+module.exports = app;
