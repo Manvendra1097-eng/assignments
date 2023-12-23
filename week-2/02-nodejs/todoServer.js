@@ -124,7 +124,7 @@ app.put('/todos/:id', function (req, res) {
       }
       return todo;
     });
-
+// writting file 
     fs.writeFile('./todos.json', JSON.stringify(todos), 'utf-8', (err) => {
       if (err) return res.status(500).json({ msg: 'Internal server error' });
       return res.status(200).send();
